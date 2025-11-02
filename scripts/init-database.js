@@ -16,11 +16,11 @@ async function initDatabase() {
 
         // Create database if it doesn't exist
         const dbName = process.env.DB_NAME || 'barista_cafe';
-        await connection.execute(`CREATE DATABASE IF NOT EXISTS \`${dbName}\``);
+        await connection.query(`CREATE DATABASE IF NOT EXISTS \`${dbName}\``);
         console.log(`Database '${dbName}' created or already exists`);
 
         // Use the database
-        await connection.execute(`USE \`${dbName}\``);
+        await connection.query(`USE \`${dbName}\``);
 
         // Create bookings table
         await connection.execute(`
