@@ -216,9 +216,14 @@ app.use('*', (req, res) => {
 async function startServer() {
     await initDatabase();
     
-    app.listen(PORT, () => {
-        console.log(`Barista Cafe API server running on port ${PORT}`);
+    const HOST = process.env.HOST || '0.0.0.0';
+    
+    app.listen(PORT, HOST, () => {
+        console.log(`Barista Cafe API server running on ${HOST}:${PORT}`);
         console.log(`Health check: http://localhost:${PORT}/api/health`);
+        if (HOST === '0.0.0.0') {
+            console.log(`Server is accessible from all network interfaces`);
+        }
     });
 }
 

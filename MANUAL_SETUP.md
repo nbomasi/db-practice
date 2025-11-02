@@ -318,6 +318,69 @@ Once both servers are running:
 - Make sure backend server is running
 - Check that both servers are accessible
 
+### Issue: Cannot access backend via curl or browser (connection refused/timeout)
+
+**Symptoms:**
+- Server shows it's running but `curl http://localhost:3000/api/health` fails
+- Browser can't connect to `http://localhost:3000/api/health`
+- Connection refused or timeout errors
+
+**Solution:**
+
+1. **Restart the server** after the latest code update (the server now listens on `0.0.0.0`):
+   - Stop the server (Ctrl + C)
+   - Start it again: `npm start` or `npm run dev`
+   - Look for the message: `Server is accessible from all network interfaces`
+
+2. **Verify server is actually running:**
+   ```bash
+   # Check if the process is running
+   # On Windows
+   netstat -ano | findstr :3000
+   
+   # On Linux/Mac
+   lsof -i :3000
+   # or
+   sudo netstat -tlnp | grep :3000
+   ```
+
+3. **Check firewall rules (if on Linux/server):**
+   ```bash
+   # Ubuntu/Debian - check ufw status
+   sudo ufw status
+   
+   # Allow port 3000 if firewall is active
+   sudo ufw allow 3000/tcp
+   
+   # For EC2 - check Security Groups in AWS Console
+   # Ensure inbound rule allows port 3000 from your IP or 0.0.0.0/0
+   ```
+
+4. **If accessing from another machine:**
+   - Use the server's IP address instead of localhost:
+     ```bash
+     curl http://SERVER_IP:3000/api/health
+     ```
+   - Replace `SERVER_IP` with your actual server IP or EC2 public IP
+
+5. **If on EC2 AWS:**
+   - Check Security Group inbound rules
+   - Ensure port 3000 is open (Type: Custom TCP, Port: 3000, Source: 0.0.0.0/0 or your IP)
+
+6. **Test locally first:**
+   ```bash
+   # On the same machine as the server
+   curl http://localhost:3000/api/health
+   curl http://127.0.0.1:3000/api/health
+   
+   # If localhost works but external doesn't, it's a firewall/network issue
+   ```
+
+7. **Check server logs:**
+   - Look at the terminal where server is running
+   - Check for any error messages
+   - Verify you see: `Database connected successfully` and `Barista Cafe API server running on 0.0.0.0:3000`
+
 ### Issue: "Database 'barista_cafe' doesn't exist"
 
 **Solution:**
