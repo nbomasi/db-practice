@@ -208,8 +208,31 @@ npm install -g http-server
 Then serve:
 ```bash
 cd 2137_barista_cafe
-http-server -p 8080
+http-server -p 8080 --cors
 ```
+
+**For EC2/AWS instances:**
+```bash
+cd 2137_barista_cafe
+http-server -p 8080 -a 0.0.0.0 --cors
+```
+The `-a 0.0.0.0` flag ensures http-server listens on all network interfaces, making it accessible via the EC2 public IP.
+
+**Important:** 
+- Make sure you run `http-server` from **inside** the `2137_barista_cafe` directory
+- The `--cors` flag enables CORS which may be needed for API requests
+- Verify you're in the right directory: you should see `index.html` in your current directory before running http-server
+
+**To verify you're in the correct directory:**
+```bash
+# On Windows (PowerShell)
+Get-ChildItem index.html
+
+# On Windows (Git Bash) / Linux / Mac
+ls index.html
+```
+
+If you see "No such file or directory", you're in the wrong directory. Navigate to `2137_barista_cafe` first.
 
 #### Option 3: Using VS Code Live Server
 
@@ -317,6 +340,116 @@ Once both servers are running:
 - Ensure `FRONTEND_URL` in `.env` matches exactly where you're serving the frontend
 - Make sure backend server is running
 - Check that both servers are accessible
+
+### Issue: Frontend not loading (http-server running but page is blank or assets fail to load)
+
+**Symptoms:**
+- http-server shows it's running on port 8080
+- Browser shows blank page or "can't reach this page"
+- CSS/JS/images not loading (404 errors in browser console)
+- Page loads but is unstyled
+
+**Solution:**
+
+1. **Verify you're running http-server from the correct directory:**
+   ```bash
+   # Check current directory
+   pwd  # On Linux/Mac/Git Bash
+   cd   # On Windows CMD/PowerShell
+   
+   # You should be in: .../2137_barista_cafe
+   # Verify index.html exists:
+   ls index.html  # Linux/Mac/Git Bash
+   dir index.html # Windows CMD
+   Get-ChildItem index.html # PowerShell
+   ```
+
+2. **If you're in the wrong directory, navigate to the frontend folder:**
+   ```bash
+   cd 2137_barista_cafe
+   # Then run http-server again
+   http-server -p 8080 --cors
+   ```
+
+3. **Check the http-server output:**
+   - When started correctly, you should see something like:
+     ```
+     Starting up http-server, serving ./
+     Available on:
+       http://127.0.0.1:8080
+       http://192.168.x.x:8080
+     ```
+   - If you see errors, note them down
+
+4. **Try accessing the correct URL:**
+   - Open browser and go to: `http://localhost:8080`
+   - Or try: `http://127.0.0.1:8080`
+   - Make sure you're accessing `/index.html` or just `/` (not `/2137_barista_cafe/index.html`)
+
+5. **Check browser console (F12):**
+   - Open Developer Tools (F12)
+   - Check the Console tab for JavaScript errors
+   - Check the Network tab to see which files are failing to load
+   - Look for 404 errors on CSS/JS/image files
+
+6. **Alternative: Use absolute path with http-server:**
+   ```bash
+   # From project root directory
+   http-server 2137_barista_cafe -p 8080 --cors
+   ```
+
+7. **If assets still fail to load, check file permissions:**
+   - Make sure the `css/`, `js/`, and `images/` folders exist in the `2137_barista_cafe` directory
+
+### Issue: Frontend not accessible from browser on EC2/AWS
+
+**Symptoms (EC2-specific):**
+- http-server shows "Available on http://127.0.0.1:8080"
+- Can't access from your local browser
+- Connection timeout when accessing EC2 public IP
+
+**Solution:**
+
+1. **Use the public IP address, not localhost:**
+   - Find your EC2 public IP in AWS Console (EC2 Dashboard → Instances)
+   - Access via: `http://YOUR_PUBLIC_IP:8080` (not `http://127.0.0.1:8080`)
+
+2. **Configure EC2 Security Group:**
+   - Go to AWS Console → EC2 → Security Groups
+   - Select your instance's security group
+   - Click "Edit inbound rules"
+   - Add rule:
+     - **Type:** Custom TCP
+     - **Port:** 8080
+     - **Source:** 0.0.0.0/0 (for public access) or your specific IP
+     - Click "Save rules"
+
+3. **Configure AWS Firewall (if UFW is enabled):**
+   ```bash
+   sudo ufw allow 8080/tcp
+   sudo ufw status  # Verify rule is added
+   ```
+
+4. **Verify http-server is listening on all interfaces:**
+   - http-server should show both `127.0.0.1` and a private IP (like `172.31.x.x`)
+   - This means it's already listening on all interfaces (0.0.0.0)
+   - If you only see `127.0.0.1`, restart with: `http-server -p 8080 -a 0.0.0.0 --cors`
+
+5. **Test from EC2 instance itself:**
+   ```bash
+   # Test if server is responding locally
+   curl http://127.0.0.1:8080
+   
+   # If that works, test via public IP (replace with your EC2 public IP)
+   curl http://YOUR_PUBLIC_IP:8080
+   ```
+
+6. **Update .env FRONTEND_URL for CORS:**
+   - In your `.env` file, make sure `FRONTEND_URL` matches your EC2 public IP:
+     ```env
+     FRONTEND_URL=http://YOUR_PUBLIC_IP:8080
+     ```
+   - Restart the backend server after updating `.env`
 
 ### Issue: Cannot access backend via curl or browser (connection refused/timeout)
 

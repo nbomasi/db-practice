@@ -104,7 +104,7 @@ Bootstrap 5 HTML CSS Template
                                                     </div>
 
                                                     <div class="col-lg-6 col-12">
-                                                        <input type="tel" class="form-control" name="booking-form-phone" placeholder="Phone: 085 456 7890" pattern="[0-9]{3}-[0-9]{3}-[0-9]{4}" required="">
+                                                        <input type="tel" class="form-control" name="booking-form-phone" id="booking-form-phone" placeholder="Phone: Enter 10 or more digits" title="Please enter a valid phone number with at least 10 digits" required="">
                                                     </div>
 
                                                     <div class="col-lg-6 col-12">
@@ -272,6 +272,15 @@ Bootstrap 5 HTML CSS Template
                         if (!formData.name || !formData.phone || !formData.date || !formData.time || !formData.people) {
                             throw new Error('Please fill in all required fields');
                         }
+                        
+                        // Validate phone number - must have at least 10 digits (numbers only)
+                        const phoneDigits = formData.phone.replace(/\D/g, ''); // Remove all non-digits
+                        if (phoneDigits.length < 10) {
+                            throw new Error('Please enter a valid phone number with at least 10 digits');
+                        }
+                        
+                        // Clean phone number - send only digits to API
+                        formData.phone = phoneDigits;
                         
                         const response = await fetch(`${API_BASE_URL}/bookings`, {
                             method: 'POST',
